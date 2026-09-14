@@ -92,6 +92,7 @@ actual fun loadShader(assetPath: String): String =
 - Place shader logic in shared/src/commonMain
 - Put .frag files in shaders/ (project root)
 - Test shader on Android before porting to iOS/Desktop
+- **Place shader files in shared/src/commonMain/resources/shaders/** for cross-platform distribution
 
 ## GLSL Context
 
@@ -142,3 +143,39 @@ expect class ShaderRenderer(shaderSource: String) {
 - u_time : seconds since shader start (float)
 - u_resolution : viewport size in pixels (vec2)
 - No textures in v1 (100% procedural)
+
+## Documentation and Comments
+
+### Language Requirement
+- **Documentation and code comments MUST be written in English only**
+- This applies to:
+  - README files (root, shared/, androidApp/)
+  - Code comments (KDoc, inline comments)
+  - Commit messages
+  - Documentation strings
+  - Any project documentation
+
+### Documentation Guidelines
+- Project documentation: Root README.md, module READMEs
+- Code documentation: KDoc comments for public APIs
+- Inline comments: Explain non-obvious code logic
+- Commit messages: Use clear English descriptions
+
+## Development Workflow
+
+### Adding New Shaders (v2.0)
+**IMPORTANT**: Shaders must be placed in `shared/src/commonMain/resources/shaders/`!
+
+1. Create a new `.frag` file in `shared/src/commonMain/resources/shaders/`
+2. Ensure it follows the GLSL ES 3.0 specification
+3. Run the Gradle build to copy resources to Android
+4. Shaders are automatically available in `androidApp/src/main/assets/shaders/`
+5. Access via: `"shaders/your-shader.frag"`
+
+### Platform-Specific Code Locations
+- **Shared UI**: `shared/src/commonMain/kotlin/eu/gsegado/fragkit/ui/`
+- **Shared Shader Logic**: `shared/src/commonMain/kotlin/eu/gsegado/fragkit/shader/`
+- **Shared Resources**: `shared/src/commonMain/resources/`
+- **Android Implementation**: `shared/src/androidMain/` + `androidApp/`
+- **iOS Implementation**: `shared/src/iosMain/` + `iosApp/`
+- **Desktop Implementation**: `shared/src/desktopMain/` + `desktopApp/`

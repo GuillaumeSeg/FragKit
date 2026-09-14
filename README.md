@@ -2,54 +2,124 @@
 
 **FragKit** — Kotlin Multiplatform app (Android / iOS / Desktop) that loads and renders fragment shaders (GLSL) fullscreen.
 
-## Current Implementation Status
+## 📋 Overview
+
+FragKit is a Kotlin Multiplatform (KMP) application that loads and displays GLSL ES 3.0 fragment shaders fullscreen. The architecture uses `expect`/`actual` for complete cross-platform compatibility between Android, iOS, and Desktop.
+
+### ✅ Current Implementation Status
 
 - ✅ **Android App**: Complete and functional
-- 🚧 **iOS App**: Not yet implemented
-- 🚧 **Desktop App**: Not yet implemented
-- ✅ **Shared Module**: Core shader loading and rendering logic
+- ✅ **Shared Module**: Core shader logic with shaders in commonMain resources
+- 🚧 **iOS App**: Not yet implemented (project structure ready)
+- 🚧 **Desktop App**: Not yet implemented (project structure ready)
 
-## Focus Areas
+### 🎯 Focus Areas
 
 - **KMP Architecture**: Proper use of `expect`/`actual` for cross-platform compatibility
 - **Compose Multiplatform**: Unified UI across all platforms
-- **Shader Rendering**: GLSL ES 3.0 fragment shaders with `u_time` and `u_resolution` uniforms
+- **Shader Distribution**: Shaders in `shared/src/commonMain/resources/` for distribution
+- **Android Integration**: Automatic copy of shared resources to `androidApp/src/main/assets/`
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 FragKit/
-├── shared/
-│   ├── src/commonMain/     # Shared code (UI, shader logic)
-│   ├── src/androidMain/    # Android-specific implementations
-│   ├── src/iosMain/        # iOS-specific implementations (TODO)
-│   └── src/desktopMain/    # Desktop-specific implementations (TODO)
-├── androidApp/             # Android application (complete)
-├── iosApp/                 # iOS application (Xcode project)
-├── desktopApp/             # Desktop application (TODO)
-└── shaders/                # Sample GLSL fragment shaders
+├── shared/                            # KMP Core Module (NEW)
+│   ├── src/commonMain/
+│   │   ├── kotlin/eu/gsegado/fragkit/
+│   │   │   ├── ui/
+│   │   │   │   ├── HomeScreen.kt
+│   │   │   │   └── ShaderScreen.kt
+│   │   │   ├── shader/
+│   │   │   │   ├── ShaderLoader.kt     # expect fun loadShader()
+│   │   │   │   └── ShaderRenderer.kt   # expect class with lifecycle methods
+│   │   │   └── theme/
+│   │   │       └── Theme.kt
+│   │   └── resources/shaders/          # 📦 SHADERS DISTRIBUTION (NEW)
+│   │       ├── plasma.frag            # Sample plasma shader
+│   │       └── vertex.glsl            # Vertex shader for quad
+│   ├── src/androidMain/
+│   │   └── kotlin/eu/gsegado/fragkit/
+│   │       ├── ui/ShaderScreen.android.kt
+│   │       └── shader/
+│   │           ├── ShaderLoader.android.kt    # Android asset loading
+│   │           └── ShaderRenderer.android.kt  # GLES30 implementation
+│   ├── src/iosMain/
+│   │   └── kotlin/eu/gsegado/fragkit/
+│   │       └── shader/
+│   │           └── ShaderLoader.ios.kt       # TODO: Bundle loading
+│   └── src/desktopMain/
+│       └── kotlin/eu/gsegado/fragkit/
+│           └── shader/
+│               └── ShaderLoader.desktop.kt   # TODO: File loading
+│
+├── androidApp/                         # Android Application (Complete)
+│   ├── src/main/
+│   │   ├── java/eu/gsegado/fragkit/
+│   │   │   ├── MainActivity.kt
+│   │   │   └── FragKitApp.kt
+│   │   ├── assets/shaders/             # Copied from shared (automatic)
+│   │   │   ├── plasma.frag
+│   │   │   └── vertex.glsl
+│   │   └── res/
+│   └── build.gradle.kts                # Config: copies shared resources
+│
+├── iosApp/                             # iOS Application (Xcode)
+├── desktopApp/                         # Desktop Application (TODO)
+└── shaders/                            # (Historical - obsolete)
 ```
 
-## Key Features
+## 🔑 Key Features
 
 ### Shared Module (`shared/`)
+
+The heart of the application with all shared shaders:
+
 - **UI Components**: HomeScreen, ShaderScreen (Compose Multiplatform)
-- **Shader Handling**: ShaderRenderer (expect/actual), ShaderLoader (expect/actual)
+- **Shader Handling**: 
+  - `ShaderLoader` (expect/actual) - Handles cross-platform loading
+  - `ShaderRenderer` (expect/actual) - Handles graphical rendering
 - **Theme**: Dark, minimal theme implementation
 - **Navigation**: Simple state-based navigation (no external libraries)
+- **Resources**: Shaders stored in `resources/shaders/` 📦
+
+### Shader Loading Architecture
+
+```kotlin
+// Common path from shared code
+loadShader("shaders/plasma.frag")
+
+// Android implementation:
+// 1. Shader found in shared/src/commonMain/resources/shaders/
+// 2. Automatically copied to androidApp/src/main/assets/shaders/
+// 3. Loaded with context.assets.open("shaders/plasma.frag")
+```
+
+### Android Integration
+
+The build automatically copies shared module resources:
+
+```kotlin
+// In androidApp/build.gradle.kts
+android {
+    sourceSets {
+        named("main") {
+            assets.srcDir("../shared/src/commonMain/resources")
+        }
+    }
+}
+```
 
 ### Android Implementation (`androidApp/`)
+
 - **Entry Point**: MainActivity.kt
 - **App Logic**: FragKitApp.kt (state management, navigation)
-- **Assets**: Shaders stored in `src/main/assets/shaders/`
-- **Shader Rendering**: 
-  - Vertex shader: `shaders/vertex.glsl` (fullscreen quad)
-  - Fragment shader: `shaders/plasma.frag` (example plasma effect)
+- **Assets**: Shaders copied from shared → `assets/shaders/`
 - **Dependencies**: Compose Multiplatform, AndroidX
 
-## Shader Requirements
+## 🎨 Shader Requirements
 
-All fragment shaders must follow the GLSL ES 3.0 specification:
+All GLSL ES 3.0 shaders follow the specification:
 
 ```glsl
 #version 300 es
@@ -64,55 +134,83 @@ void main() {
 ```
 
 ### Uniforms
-- `u_time`: Seconds since shader start (float)
+
+- `u_time`: Time in seconds since start (float)
 - `u_resolution`: Viewport size in pixels (vec2)
 
-### Output
-- `FragColor`: Output color (vec4)
+### Current Shaders
 
-## Building and Running
+- `plasma.frag` - Example plasma with time-based animation
+- `vertex.glsl` - Vertex shader for quad fullscreen rendering
+
+## 🚀 Building and Running
 
 ### Android App
+
 ```bash
 # Build debug APK
 ./gradlew :androidApp:assembleDebug
 
-# Install and run on connected device/emulator
+# Install and run
 ./gradlew :androidApp:installDebug
 ```
 
 ### Requirements
+
 - Android API level 26+ (Android 8.0)
 - OpenGL ES 3.0 support
+- Kotlin 1.9+
+- JDK 11+
 
-## Development Guidelines
+## 📝 Adding New Shaders (v2.0)
 
-### Adding New Shaders
-1. Place `.frag` files in `androidApp/src/main/assets/shaders/`
-2. Ensure they follow the GLSL ES 3.0 specification above
-3. Update the HomeScreen to load the new shader (currently loads `plasma.frag`)
+**IMPORTANT**: Shaders MUST be placed in `shared/src/commonMain/resources/shaders/`!
+
+1. Create a new `.frag` file in `shared/src/commonMain/resources/shaders/`
+2. Ensure it follows the GLSL ES 3.0 specification
+3. Run the Gradle build to copy resources to Android
+4. Shaders are automatically available in `androidApp/src/main/assets/shaders/`
+5. Access via: `"shaders/your-shader.frag"`
+
+### Access Path
+
+- Since shared code: `"shaders/your-shader.frag"`
+- Android implementation automatically normalizes the path
+
+## 🌐 Development Guidelines
 
 ### Cross-Platform Development
-- Keep UI code in `shared/src/commonMain/`
-- Place platform-specific code in respective `*Main/` source sets
-- Use `expect`/`actual` for platform-dependent functionality
-- Test on Android first before implementing iOS/Desktop
+
+- ✅ **Keep UI code** in `shared/src/commonMain/`
+- ✅ **Place shader logic** in the shared module
+- ✅ **Use expect/actual** for platform-dependent code
+- ✅ **Test on Android** first before implementing iOS/Desktop
+- ✅ **Shaders in shared** resources for distribution
 
 ### Code Conventions
+
 - Follow Kotlin naming conventions (`PascalCase` for classes, `camelCase` for functions)
 - One file per main class/composable
 - Compose Multiplatform for all UI
 - Simple state-based navigation
+- Function name: `loadShader(assetPath: String): String`
 
-## Sample Shader
+### Architecture Directives
 
-The project includes a sample plasma shader that demonstrates:
-- Time-based animation (`u_time`)
-- Resolution-aware rendering (`u_resolution`)
-- Procedural color generation
-- Sine wave patterns
+| Component | Location | Notes |
+|-----------|----------|-------|
+| UI | `shared/src/commonMain/` | Compose Multiplatform |
+| Shader Logic | `shared/` | Expect/actual pattern |
+| Android Implementation | `shared/src/androidMain/`, `androidApp/` | Platform-specific |
+| Shaders | `shared/src/commonMain/resources/shaders/` | Distribution source 📦 |
+| Android Assets | `androidApp/src/main/assets/shaders/` | Auto-copied from shared |
 
-## Next Steps
+## 📚 Documentation
+
+- 📖 [Shared Module README](shared/README.md) - Architecture and API of the shared module
+- 📖 [Android App README](androidApp/README.md) - Configuration and Android development
+
+## 🛣️ Next Steps
 
 1. **Complete iOS Implementation**:
    - Implement `ShaderRenderer.ios.kt` using MTKView/Metal
@@ -125,16 +223,36 @@ The project includes a sample plasma shader that demonstrates:
    - Create desktop application
 
 3. **Enhance Features**:
-   - Add shader selection UI
-   - Implement uniform controls
-   - Add shader compilation error display
-   - Support for multiple shader passes
+   - Add shader selection UI with options
+   - Implement uniform controls (time scale, resolution, etc.)
+   - Add shader compilation error display with line numbers
+   - Support for multiple passes (Multi-pass shaders)
+   - Add shader preview/comparison
 
-## License
+4. **Improve Developer Experience**:
+   - Add KDoc documentation to all public APIs
+   - Create sample shaders library
+   - Add unit tests for shader loading
+   - Performance profiling and optimization
+
+## 🤝 Contributing
+
+When adding new features:
+
+1. **UI Components**: Place in `shared/src/commonMain/`
+2. **Shader Logic**: Place in the shared module
+3. **Platform-Specific Code**: Place in `*Main/` source sets
+4. **Expect/Actual**: Use this pattern for cross-platform
+5. **Shaders**: Place in `shared/src/commonMain/resources/shaders/` 📦
+6. **Test on Android** before porting to other platforms
+7. **Documentation**: Update corresponding READMEs
+
+## 📄 License
 
 This project is part of FragKit - a Kotlin Multiplatform shader rendering application.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - Inspired by shadertoy.com and similar platforms
 - Built with Kotlin Multiplatform and Compose Multiplatform
+- Shader distribution via shared KMP module for true cross-platform support 📦
