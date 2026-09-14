@@ -56,6 +56,12 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
         }
+        jvmMain.dependencies {
+            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.lwjgl)
+            implementation(libs.lwjgl.glfw)
+            implementation(libs.lwjgl.opengl)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }

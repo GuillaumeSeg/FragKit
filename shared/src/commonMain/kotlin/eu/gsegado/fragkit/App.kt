@@ -1,49 +1,44 @@
 package eu.gsegado.fragkit
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
-
-import fragkit.shared.generated.resources.Res
-import fragkit.shared.generated.resources.compose_multiplatform
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import eu.gsegado.fragkit.shader.ShaderRenderer
+import eu.gsegado.fragkit.ui.HomeScreen
+import eu.gsegado.fragkit.ui.ShaderScreen
+import eu.gsegado.fragkit.shader.loadShader
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+    val currentScreen = remember { mutableStateOf<Screen>(Screen.Home) }
+    val shaderSource = remember { mutableStateOf<String?>(null) }
+    
+    when (currentScreen.value) {
+        Screen.Home -> {
+            HomeScreen(
+                onLoadShaderClick = {
+                    // Load the default shader for demo purposes
+                    shaderSource.value = loadShader("plasma.frag")
+                    currentScreen.value = Screen.Shader
                 }
+            )
+        }
+        
+        Screen.Shader -> {
+            shaderSource.value?.let { shaderSrc ->
+                val renderer = remember { ShaderRenderer(shaderSrc) }
+                ShaderScreen(
+                    shaderRenderer = renderer,
+                    onBackPressed = { currentScreen.value = Screen.Home }
+                )
             }
         }
     }
+}
+
+sealed interface Screen {
+    object Home : Screen
+    object Shader : Screen
 }

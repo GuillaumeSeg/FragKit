@@ -13,6 +13,11 @@ dependencies {
     implementation(libs.kotlinx.coroutinesSwing)
 
     implementation(libs.compose.uiToolingPreview)
+
+    // LWJGL for OpenGL and GLFW (native dependencies included)
+    implementation(libs.lwjgl)
+    implementation(libs.lwjgl.glfw)
+    implementation(libs.lwjgl.opengl)
 }
 
 compose.desktop {
